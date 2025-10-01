@@ -1,9 +1,22 @@
 use serde::{Serialize, Deserialize};
-use serde_json::{Result, Value};
+use url::Url;
+use uuid::Uuid;
+use std::time::Duration;
+use chrono::DateTime;
+use chrono::Utc;
+use duration_str::deserialize_duration;
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
+enum RequestType {
+  Success,
+  Fail,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Request {
-    r#type: String,
+    #[serde(rename = "type")]
+    request_type: RequestType,
     stream: Stream,
     gifts: Vec<Gift>,
     debug: Debug,
@@ -12,10 +25,10 @@ pub struct Request {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Stream {
-    user_id: String,
+    user_id: Uuid,
     is_private: bool,
     settings: u32,
-    shard_url: String,
+    shard_url: Url,
     public_tariff: PublicTariff,
     private_tariff:PrivateTariff,
 }
@@ -24,14 +37,16 @@ pub struct Stream {
 pub struct PublicTariff {
     id: u32,
     price: u32,
-    duration: String,
+    #[serde(deserialize_with = "deserialize_duration")]
+    duration: Duration,
     description: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PrivateTariff {
     client_price: u32,
-    duration: String,
+    #[serde(deserialize_with = "deserialize_duration")]
+    duration: Duration,
     description: String,
 }
 
@@ -44,8 +59,9 @@ pub struct Gift {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Debug {
-    duration: String,
-    at: String,
+    #[serde(deserialize_with = "deserialize_duration")]
+    duration: Duration,
+    at: DateTime<Utc>,
 }
 
 #[cfg(test)]
